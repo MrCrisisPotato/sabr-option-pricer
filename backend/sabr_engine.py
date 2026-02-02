@@ -333,7 +333,7 @@ def process_day(group):
         except:
             return 1e6
         
-    bnds = ((0.001, None), (-0.9999, 0.9999), (0.001, None))
+    bnds = [(0.0001, 5), (-0.9999, 0.9999), (0.0001, 5)]
     # Constraints to ensure valid SABR parameters
     cons = (
         # {'type': 'ineq', 'fun': lambda x: 0.99 - x[1]},  # Beta <= 0.99
@@ -343,7 +343,7 @@ def process_day(group):
         {'type': 'ineq', 'fun': lambda x: 1 - abs(x[1])} # Rho in [-1, 1]
     )
     
-    result = minimize(objective_f, params, bounds=bnds, method='SQSLP', tol=1e-7)
+    result = minimize(objective_f, params, bounds=bnds, method='SLSQP', tol=1e-7)
     
     
     calibrated_params = result['x']

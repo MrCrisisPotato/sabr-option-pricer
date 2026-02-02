@@ -244,6 +244,19 @@ def infer_spot_price_putcall_parity(group, r):
     
     return S
 
+
+# Basic buy/sell signal based on mispricing and vega
+def buy_signal(row):
+    if row["Mispricing_Pct"] > 5 and row["Vega"] > 3000:
+        return "STRONG BUY"
+    elif row["Mispricing_Pct"] > 2:
+        return "BUY"
+    elif row["Mispricing_Pct"] < -5:
+        return "AVOID / SELL"
+    else:
+        return "HOLD / FAIR"
+
+
 # --- 3. DAILY PROCESSING & CALIBRATION ---
 
 def process_day(group):
@@ -352,7 +365,7 @@ def process_day(group):
         lambda x: black_76_price(fwd, x['Strike Price'], T, r, x['SABR_IV'], x['Option type']), 
         axis=1
     )
-    group['Mispricing_%'] = (
+    group['Mispricing_Pct'] = (
         (group['SABR_B76_Price'] - group['Entry_Premium'])
         / group['Entry_Premium']
     ) * 100
@@ -399,6 +412,13 @@ def process_day(group):
             "Fair"
         )
     )
+
+    group["Buy_Signal"] = group.apply(buy_signal, axis=1)
+    group["Buy_Confidence"] = (
+        0.6 * group["Mispricing_Pct"].clip(lower=0) +
+        0.4 * (group["Vega"] / group["Vega"].max() * 10)
+    ).clip(0, 100)
+
     print("Has inf:", np.isinf(group.select_dtypes(float)).any().any())
     print("Has NaN:", group.isna().any().any())
 

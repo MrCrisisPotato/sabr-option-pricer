@@ -93,6 +93,37 @@ if st.sidebar.button("Load Options"):
         use_container_width=True
     )
 
+    def highlight_signal(row):
+        if row["Buy_Signal"] == "STRONG BUY":
+            return ["background-color: #004d1a"] * len(row)
+        elif row["Buy_Signal"] == "BUY":
+            return ["background-color: #0b3d91"] * len(row)
+        elif row["Buy_Signal"] == "AVOID / SELL":
+            return ["background-color: #4d0000"] * len(row)
+        return ["" for _ in row]
+    
+    st.dataframe(
+        df.style.apply(highlight_signal, axis=1),
+        use_container_width=True
+    )
+
+    st.subheader("Buy Recommendations")
+
+    buy_df = df[df["Buy_Signal"].isin(["BUY", "STRONG BUY"])]
+
+    if buy_df.empty:
+        st.info("No attractive buy opportunities for this expiry.")
+    else:
+        st.dataframe(
+            buy_df.sort_values("Mispricing_Pct", ascending=False)[
+                ["Strike Price", "Option type", "Entry_Premium",
+                "SABR_B76_Price", "Mispricing_Pct", "Vega", "Delta", "Buy_Signal"]
+            ],
+            use_container_width=True
+        )
+
+
+
     # ---------------- Charts ----------------
     # st.subheader("SABR vs Black-Scholes Prices")
     

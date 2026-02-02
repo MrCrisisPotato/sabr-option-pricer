@@ -11,7 +11,7 @@ except:
     GPU_AVAILABLE = False
 
 
-# --- 1. PRICING ENGINES ---
+# Pricing Engines
 
 def black_scholes_price(S, K, T, r, sigma, otype):
     """The Standard Black-Scholes Model (Spot-based)."""
@@ -67,10 +67,10 @@ def cuda_sabr_monte_carlo_price(F0, K, T, r, alpha, beta, rho, nu, otype, paths=
         dW1 = z1 * sqrt_dt
         dW2 = (rho * z1 + cp.sqrt(1 - rho**2) * z2) * sqrt_dt
         
-        # Update forward price (using Euler-Maruyama scheme)
+        # updating forward price using Euler-Maruyama scheme
         F = F + sigma * cp.power(cp.maximum(F, 1e-10), beta) * dW1
         
-        # Update volatility (ensure it stays positive)
+        # update volatility
         sigma = cp.maximum(sigma + nu * sigma * dW2, 1e-6)
         
         # Absorbing barrier at zero for forward prices
@@ -88,68 +88,7 @@ def cuda_sabr_monte_carlo_price(F0, K, T, r, alpha, beta, rho, nu, otype, paths=
     return float(price)
 
 
-# def cuda_andersen_sabr_mc_price(
-#     F0, K, T, r,
-#     alpha, beta, rho, nu,
-#     otype,
-#     paths=500_000
-# ):
-#     """
-#     Andersen-style SABR Monte Carlo
-#     Structure-preserving, calibration-consistent SABR simulation.
-#     """
-
-#     # --- 1. Simulate volatility exactly (lognormal) ---
-#     # sigma_T = alpha * exp(-0.5 nu^2 T + nu sqrt(T) Z)
-#     Z2 = cp.random.standard_normal(paths)
-#     sigma_T = alpha * cp.exp(-0.5 * nu**2 * T + nu * cp.sqrt(T) * Z2)
-
-#     # --- 2. Integrated variance approximation ---
-#     # Andersen lognormal moment-matched approximation
-#     V = (
-#         alpha**2
-#         * (cp.exp(nu**2 * T) - 1.0)
-#         / (nu**2)
-#     )
-
-#     # --- 3. Independent Brownian for forward ---
-#     Z1 = cp.random.standard_normal(paths)
-
-#     # --- 4. Andersen transformation for SABR forward ---
-#     if abs(beta - 1.0) < 1e-6:
-#         # Lognormal SABR (beta = 1) — exact
-#         drift = -0.5 * V
-#         diffusion = cp.sqrt(V) * (
-#             rho * Z2 + cp.sqrt(1 - rho**2) * Z1
-#         )
-#         F_T = F0 * cp.exp(drift + diffusion)
-
-#     else:
-#         # General beta ≠ 1
-#         one_minus_beta = 1.0 - beta
-
-#         X = (
-#             F0**one_minus_beta
-#             + one_minus_beta * (
-#                 rho * alpha * cp.sqrt(T) * Z2
-#                 + cp.sqrt(1 - rho**2) * cp.sqrt(V) * Z1
-#             )
-#         )
-
-#         # Enforce positivity WITHOUT absorbing barrier
-#         F_T = cp.maximum(X, 0.0) ** (1.0 / one_minus_beta)
-
-#     # --- 5. Payoff ---
-#     if otype == "CE":
-#         payoff = cp.maximum(F_T - K, 0.0)
-#     else:
-#         payoff = cp.maximum(K - F_T, 0.0)
-
-#     # --- 6. Discount ---
-#     price = cp.exp(-r * T) * cp.mean(payoff)
-
-#     return float(price)
-
+# Black-Scholes Greeks
 
 def bs_vega(S, K, T, r, sigma):
     if T <= 0 or sigma <= 0:
@@ -167,7 +106,7 @@ def bs_delta(S, K, T, r, sigma, otype):
 
 
 
-# --- 2. QUANTLIB HELPERS ---
+# Quantlib Helpers
 
 def get_ql_option_type(otype):
     """Convert option type string to QuantLib type."""
@@ -195,7 +134,7 @@ def implied_vol_finder(market_price, S, K, T, r, otype):
         
         return option.impliedVolatility(market_price, process)
     except:
-        return np.nan  # Default fallback (old - 0.2) #this
+        return np.nan  # Default fallback (old - 0.2)
 
 
 def infer_spot_price_putcall_parity(group, r):
@@ -244,26 +183,20 @@ def infer_spot_price_putcall_parity(group, r):
     
     return S
 
-# --- 3. DAILY PROCESSING & CALIBRATION ---
+# Processing and calibration
 
 def process_day(group):
     """Process a single day's options data with calibration and pricing."""
     group = group.copy()
-    print("GROUP SIZE:", len(group))
-    print("ENTRY DATE:", group["Entry_Date"].iloc[0])
+    # print("GROUP SIZE:", len(group))
+    # print("ENTRY DATE:", group["Entry_Date"].iloc[0])
 
-
-    # A. Improved Spot Price Inference using Put-Call Parity
     r = 0.07  # Risk-free rate          
-    # S = infer_spot_price_putcall_parity(group, r) #old
-
     try:
         S = group["Spot"].iloc[0]
     except:
-        # fallback ONLY if API fails
-        S = infer_spot_price_putcall_parity(group, r)
+        S = infer_spot_price_putcall_parity(group, r) # fallback
     
-    # Time to expiry
     T = (group['Expiry'].iloc[0] - group['Entry_Date'].iloc[0]).days / 365.0
     if T <= 0: 
         T = 1/365.0
@@ -271,17 +204,15 @@ def process_day(group):
     # Forward price for SABR
     fwd = S * np.exp(r * T)
     
-    # B. Calculate Market Implied Volatilities
+    # Calculation of market implied vol
     group['Market_Vol'] = group.apply(
         lambda row: implied_vol_finder(
             row['Entry_Premium'], S, row['Strike Price'], T, r, row['Option type']
         ), axis=1
     )
-    
-    # strikes = group['Strike Price'].values
-    # marketVols = group['Market_Vol'].values
 
-    group.loc[  #this
+    # Filter out extreme IVs
+    group.loc[  
         (group['Market_Vol'] < 0.05) |
         (group['Market_Vol'] > 2.0),
         'Market_Vol'
@@ -292,26 +223,22 @@ def process_day(group):
     strikes_fit = group.loc[valid, 'Strike Price'].values
     vols_fit = group.loc[valid, 'Market_Vol'].values
     print("SABR calibration points:", len(strikes_fit))
-    print("IV range:", vols_fit.min(), vols_fit.max())  #this
+    print("IV range:", vols_fit.min(), vols_fit.max()) 
 
     if len(strikes_fit) < 5:
         raise ValueError("Not enough valid market IVs for SABR calibration")
     
     
-    # C. SABR CALIBRATION
-    # Initial guess: [Alpha, Beta, Rho, Nu]
+    # SABR CALIBRATION
+    # Initial guess: [Alpha, Rho, Nu]
     params = [0.15, -0.3, 0.3]
-    beta = 0.7  # Fix beta for stability
+    beta = 0.7  # Fixed
     if len(strikes_fit) < 10:
         rho = 0.0
         params = [0.15, rho, 0.3]
+
     def objective_f(p):
         """Minimize RMSE between SABR and market volatilities."""
-        # try:
-        #     vols = np.array([ql.sabrVolatility(k, fwd, T, *p) for k in strikes])
-        #     return np.sqrt(np.mean((vols - marketVols)**2))
-        # except:
-        #     return 1e6
         
         alpha, rho, nu = p
         try:
@@ -325,8 +252,6 @@ def process_day(group):
     
     # Constraints to ensure valid SABR parameters
     cons = (
-        # {'type': 'ineq', 'fun': lambda x: 0.99 - x[1]},  # Beta <= 0.99
-        # {'type': 'ineq', 'fun': lambda x: x[1]},         # Beta >= 0
         {'type': 'ineq', 'fun': lambda x: x[2]},         # Nu > 0
         {'type': 'ineq', 'fun': lambda x: x[0]},         # Alpha > 0
         {'type': 'ineq', 'fun': lambda x: 1 - abs(x[1])} # Rho in [-1, 1]
@@ -338,15 +263,15 @@ def process_day(group):
     calibrated_params = result['x']
     alpha, rho, nu = calibrated_params
     
-    # D. PRICING COMPARISON
+    # Pricing Comparison
     
-    # 1. Get SABR Implied Volatilities for each strike
+    # SABR Implied Volatilities for each strike
     group['SABR_IV'] = np.nan
     group.loc[valid, 'SABR_IV'] = [ql.sabrVolatility(k, fwd, T, alpha, beta, rho, nu) for k in strikes_fit]   #this
 
     group['Smile_Shift'] = group['SABR_IV'] - group['Market_Vol']
     
-    # 2. SABR + Black-76 Pricing (Standard Approach)
+    # SABR + Black-76 Pricing
     group['SABR_B76_Price'] = np.nan
     group.loc[valid, 'SABR_B76_Price'] = group.loc[valid].apply(
         lambda x: black_76_price(fwd, x['Strike Price'], T, r, x['SABR_IV'], x['Option type']), 
@@ -357,7 +282,7 @@ def process_day(group):
         / group['Entry_Premium']
     ) * 100
     
-    # 3. SABR + Monte Carlo (TRUE Stochastic Volatility Simulation)
+    # SABR + Monte Carlo Pricing (GPU Accelerated)
     if GPU_AVAILABLE:
         group['SABR_MC_Price'] = group.apply(
             lambda x: cuda_sabr_monte_carlo_price(
@@ -366,8 +291,7 @@ def process_day(group):
             axis=1
         )
     
-    # 4. Black-Scholes Pricing (with strike-specific market IV)
-    # Using the actual market IV for each strike (smile-aware)
+    # Black-Scholes Pricing with ATM vol
     atm_idx = (group['Strike Price'] - S).abs().idxmin()
     atm_vol = group.loc[atm_idx, 'Market_Vol']
     
@@ -379,8 +303,6 @@ def process_day(group):
         lambda x: bs_delta(S, x['Strike Price'], T, r, atm_vol, x['Option type']),
         axis=1
     )
-
-
     group['BS_Price'] = group.apply(
         lambda x: black_scholes_price(S, x['Strike Price'], T, r, atm_vol, x['Option type']), #x['Market_Vol']
         axis=1
@@ -388,8 +310,8 @@ def process_day(group):
 
     group['SABR_vs_BS'] = group['SABR_B76_Price'] - group['BS_Price']
     
-    # E. Valuation Logic
-    # Compare market premium against SABR Black-76 price (industry standard)
+    # Valuation Logic
+    # Compare market premium against SABR Black-76 price
     group['Valuation'] = np.where(
         group['Entry_Premium'] < group['SABR_B76_Price'] * 0.95, 
         "Good (Cheap)", 
@@ -410,7 +332,7 @@ def process_day(group):
     return group
 
 
-# --- 4. EXECUTION ---
+# Execution
 
 if __name__ == "__main__":
     # Load data

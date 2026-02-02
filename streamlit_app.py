@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 
 # ---------------- CONFIG ----------------
-BACKEND_URL = "http://localhost:8000"   # change when deployed
+BACKEND_URL = "http://localhost:8000"  
 # ---------------------------------------
 
 st.set_page_config(

@@ -313,6 +313,7 @@ def process_day(group):
     
     # C. SABR CALIBRATION
     # Initial guess: [Alpha, Beta, Rho, Nu]
+    
     params = [0.15, -0.3, 0.3]
     beta = 0.7  # Fix beta for stability
     if len(strikes_fit) < 10:
@@ -320,15 +321,10 @@ def process_day(group):
         params = [0.15, rho, 0.3]
     def objective_f(p):
         """Minimize RMSE between SABR and market volatilities."""
-        # try:
-        #     vols = np.array([ql.sabrVolatility(k, fwd, T, *p) for k in strikes])
-        #     return np.sqrt(np.mean((vols - marketVols)**2))
-        # except:
-        #     return 1e6
         
         alpha, rho, nu = p
         alpha = max(alpha, 1e-6)
-        rho = np.clip(rho, -0.999, 0.999) # Prevents the 1.00002 error
+        rho = np.clip(rho, -0.999, 0.999)
         nu = max(nu, 1e-6)
         try:
             vols = np.array([ql.sabrVolatility(k, fwd, T, alpha, beta, rho, max(nu, 1e-6)) for k in strikes_fit]) #this
@@ -337,7 +333,7 @@ def process_day(group):
         except:
             return 1e6
         
-    
+    bnds = ((0.001, None), (-0.9999, 0.9999), (0.001, None))
     # Constraints to ensure valid SABR parameters
     cons = (
         # {'type': 'ineq', 'fun': lambda x: 0.99 - x[1]},  # Beta <= 0.99
@@ -347,11 +343,14 @@ def process_day(group):
         {'type': 'ineq', 'fun': lambda x: 1 - abs(x[1])} # Rho in [-1, 1]
     )
     
-    result = minimize(objective_f, params, constraints=cons, method='COBYLA')
+    result = minimize(objective_f, params, bounds=bnds, method='SQSLP', tol=1e-7)
     
     
     calibrated_params = result['x']
     alpha, rho, nu = calibrated_params
+    alpha = max(alpha, 1e-6)
+    rho = np.clip(rho, -0.999, 0.999)
+    nu = max(nu, 1e-6)
     
     # D. PRICING COMPARISON
     

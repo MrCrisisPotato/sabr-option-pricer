@@ -124,7 +124,7 @@ def price_options(
             "SABR_IV",
             "SABR_B76_Price",
             "BS_Price",
-            "Mispricing_%",
+            "Mispricing_Pct",
             "SABR_vs_BS",
             "Vega",
             "Delta",

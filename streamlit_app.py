@@ -73,6 +73,20 @@ if st.sidebar.button("Load Options"):
     df = pd.DataFrame(data)
 
     # ---------------- Display ----------------
+    def highlight_signal(row):
+        if row["Buy_Signal"] == "STRONG BUY":
+            return ["background-color: #004d1a"] * len(row)
+        elif row["Buy_Signal"] == "BUY":
+            return ["background-color: #0b3d91"] * len(row)
+        elif row["Buy_Signal"] == "AVOID / SELL":
+            return ["background-color: #4d0000"] * len(row)
+        return ["" for _ in row]
+    
+    if "Buy_Signal" not in df.columns:
+        st.error("Buy_Signal column missing from backend response.")
+        st.write(df.columns.tolist())
+        st.stop()
+
     st.subheader(f"Option Chain — {underlying} {expiry}")
 
     st.dataframe(
@@ -90,27 +104,10 @@ if st.sidebar.button("Load Options"):
             else "",
             subset=["Valuation"]
         ),
-        use_container_width=True
-    )
-
-    if "Buy_Signal" not in df.columns:
-        st.error("Buy_Signal column missing from backend response.")
-        st.write(df.columns.tolist())
-        st.stop()
-
-    def highlight_signal(row):
-        if row["Buy_Signal"] == "STRONG BUY":
-            return ["background-color: #004d1a"] * len(row)
-        elif row["Buy_Signal"] == "BUY":
-            return ["background-color: #0b3d91"] * len(row)
-        elif row["Buy_Signal"] == "AVOID / SELL":
-            return ["background-color: #4d0000"] * len(row)
-        return ["" for _ in row]
-    
-    st.dataframe(
         df.style.apply(highlight_signal, axis=1),
         use_container_width=True
     )
+
 
     st.subheader("Buy Recommendations")
 

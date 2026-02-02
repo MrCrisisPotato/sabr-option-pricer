@@ -11,20 +11,24 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("📈 SABR Option Pricer")
+st.title("SABR Option Pricer")
 
 # ---------------- Sidebar ----------------
 st.sidebar.header("Inputs")
 
-underlying = st.sidebar.selectbox(
+INDEX_MAP = {
+    "NIFTY 50": "NIFTY",
+    "BANKNIFTY": "BANKNIFTY",
+    "FINNIFTY": "FINNIFTY",
+    "MIDCAPNIFTY": "MIDCPNIFTY"
+}
+
+index_label = st.sidebar.selectbox(
     "Select Index",
-    ["NIFTY", "BANKNIFTY", "FINNIFTY"]
+    list(INDEX_MAP.keys())
 )
 
-expiry = st.sidebar.selectbox(
-    "Select Expiry",
-    []
-)
+underlying = INDEX_MAP[index_label]
 
 # ---------------- Load expiries ----------------
 @st.cache_data
@@ -41,11 +45,11 @@ try:
     expiries = fetch_expiries(underlying)
     expiry = st.sidebar.selectbox("Expiry Date", expiries)
 except Exception as e:
-    st.error(f"Failed to load expiries: {e}")
+    st.sidebar.error(f"Failed to load expiries: {e}")
     st.stop()
 
 # ---------------- Fetch prices ----------------
-if st.sidebar.button("🚀 Load Options"):
+if st.sidebar.button("Load Options"):
     with st.spinner("Pricing options using SABR..."):
         r = requests.get(
             f"{BACKEND_URL}/price",
@@ -69,7 +73,7 @@ if st.sidebar.button("🚀 Load Options"):
     df = pd.DataFrame(data)
 
     # ---------------- Display ----------------
-    st.subheader(f"📊 Option Chain — {underlying} {expiry}")
+    st.subheader(f"Option Chain — {underlying} {expiry}")
 
     st.dataframe(
         df.style
@@ -90,7 +94,7 @@ if st.sidebar.button("🚀 Load Options"):
     )
 
     # ---------------- Charts ----------------
-    st.subheader("📉 SABR vs Black-Scholes Prices")
+    st.subheader("SABR vs Black-Scholes Prices")
 
     chart_df = df.sort_values("Strike Price")
 

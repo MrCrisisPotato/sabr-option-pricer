@@ -327,8 +327,10 @@ def process_day(group):
         #     return 1e6
         
         alpha, rho, nu = p
+        alpha = max(alpha, 1e-6)
+        rho = np.clip(rho, -0.999, 0.999) # Prevents the 1.00002 error
+        nu = max(nu, 1e-6)
         try:
-            rho = np.clip(rho, -0.999, 0.999)
             vols = np.array([ql.sabrVolatility(k, fwd, T, alpha, beta, rho, max(nu, 1e-6)) for k in strikes_fit]) #this
             err = vols - vols_fit
             return np.sqrt(np.nanmean((err)**2))

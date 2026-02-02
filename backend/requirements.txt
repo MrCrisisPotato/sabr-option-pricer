@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+requests
+pandas
+numpy
+scipy
+quantlib
+cupy-cuda12x

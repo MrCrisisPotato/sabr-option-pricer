@@ -93,6 +93,11 @@ if st.sidebar.button("Load Options"):
         use_container_width=True
     )
 
+    if "Buy_Signal" not in df.columns:
+        st.error("Buy_Signal column missing from backend response.")
+        st.write(df.columns.tolist())
+        st.stop()
+
     def highlight_signal(row):
         if row["Buy_Signal"] == "STRONG BUY":
             return ["background-color: #004d1a"] * len(row)

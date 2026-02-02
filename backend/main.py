@@ -128,6 +128,7 @@ def price_options(
             "SABR_vs_BS",
             "Vega",
             "Delta",
+            "Buy_Signal",
             "Valuation"
         ]].to_dict(orient="records")
     

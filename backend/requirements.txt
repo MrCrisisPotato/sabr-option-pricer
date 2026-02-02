@@ -1,8 +1,8 @@
-fastapi
-uvicorn
-requests
+streamlit
 pandas
 numpy
 scipy
+matplotlib
 quantlib
-cupy-cuda12x
+requests
+cupy-cuda12x   # only if GPU is optional, otherwise remove

@@ -4,7 +4,12 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.stats import alpha, norm
 import matplotlib.pyplot as plt
-import cupy as cp
+try:
+    import cupy as cp
+    GPU_AVAILABLE = True
+except:
+    GPU_AVAILABLE = False
+
 
 # --- 1. PRICING ENGINES ---
 
@@ -353,12 +358,13 @@ def process_day(group):
     ) * 100
     
     # 3. SABR + Monte Carlo (TRUE Stochastic Volatility Simulation)
-    group['SABR_MC_Price'] = group.apply(
-        lambda x: cuda_sabr_monte_carlo_price(
-            fwd, x['Strike Price'], T, r, alpha, beta, rho, nu, x['Option type']
-        ), 
-        axis=1
-    )
+    if GPU_AVAILABLE:
+        group['SABR_MC_Price'] = group.apply(
+            lambda x: cuda_sabr_monte_carlo_price(
+                fwd, x['Strike Price'], T, r, alpha, beta, rho, nu, x['Option type']
+            ), 
+            axis=1
+        )
     
     # 4. Black-Scholes Pricing (with strike-specific market IV)
     # Using the actual market IV for each strike (smile-aware)

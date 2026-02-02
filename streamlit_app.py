@@ -94,20 +94,20 @@ if st.sidebar.button("Load Options"):
     )
 
     # ---------------- Charts ----------------
-    st.subheader("SABR vs Black-Scholes Prices")
+    # st.subheader("SABR vs Black-Scholes Prices")
+    
+    # chart_df = df.sort_values("Strike Price")
 
-    chart_df = df.sort_values("Strike Price")
+    # st.line_chart(
+    #     chart_df.set_index("Strike Price")[
+    #         ["Entry_Premium", "SABR_B76_Price", "BS_Price"]
+    #     ]
+    # )
 
-    st.line_chart(
-        chart_df.set_index("Strike Price")[
-            ["Entry_Premium", "SABR_B76_Price", "BS_Price"]
-        ]
-    )
+    # chart_df["SABR_Error"] = chart_df["SABR_B76_Price"] - chart_df["Entry_Premium"]
+    # chart_df["BS_Error"] = chart_df["BS_Price"] - chart_df["Entry_Premium"]
 
-    chart_df["SABR_Error"] = chart_df["SABR_B76_Price"] - chart_df["Entry_Premium"]
-    chart_df["BS_Error"] = chart_df["BS_Price"] - chart_df["Entry_Premium"]
-
-    st.line_chart(
-        chart_df.set_index("Strike Price")[["SABR_Error", "BS_Error"]]
-    )
+    # st.line_chart(
+    #     chart_df.set_index("Strike Price")[["SABR_Error", "BS_Error"]]
+    # )
 

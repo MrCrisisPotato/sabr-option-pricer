@@ -13,7 +13,7 @@ from backend.upstox import (
     build_live_option_chain,
     get_index_spot
 )
-from backend.pricing import price_live
+from pricing import price_live
 from backend.config import INDEX_CONFIG
 
 st.set_page_config(page_title="SABR Option Pricer", layout="wide")

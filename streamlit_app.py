@@ -8,14 +8,14 @@ sys.path.append(str(Path(__file__).parent / "backend"))
 import streamlit as st
 import pandas as pd
 
-from upstox import (
+from backend.upstox import (
     get_instruments_df,
     get_live_quotes,
     build_live_option_chain,
     get_index_spot
 )
-from pricing import price_live
-from config import INDEX_CONFIG
+from backend.pricing import price_live
+from backend.config import INDEX_CONFIG
 
 st.set_page_config(page_title="SABR Option Pricer", layout="wide")
 st.title("📈 SABR Option Pricer")

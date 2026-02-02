@@ -64,7 +64,11 @@ def price_options(
             (instruments["name"] == underlying) &
             (instruments["expiry"] == expiry_date)
         ]
-        # print(instruments[instruments["instrument_type"] == "OPTIDX"][["exchange", "name"]].drop_duplicates().head(10))
+        # print(
+        #     instruments[
+        #         instruments["instrument_type"] == "OPTIDX"
+        #     ][["exchange", "name"]].drop_duplicates().head(10)
+        # )
 
         if df.empty:
             raise HTTPException(400, "No instruments found for expiry")
@@ -94,10 +98,10 @@ def price_options(
             }
 
 
-        # keep only instruments that ACTUALLY have quotes
+        # Step 2: keep only instruments that ACTUALLY have quotes
         df = df[df["instrument_key"].isin(quotes.keys())].copy()
 
-        # ATM filtering: select 40 strikes around ATM
+        # Step 3: now safely do ATM filtering
         atm_strike = df["strike"].median()
         df.loc[:, "dist"] = (df["strike"] - atm_strike).abs()
         df = df.sort_values("dist").head(40)
@@ -107,7 +111,7 @@ def price_options(
 
         results = price_live(chain_df)
 
-        # Fix for JSON serialization issues
+        # ---- SANITIZE OUTPUT FOR JSON ----
         results = results.replace([np.inf, -np.inf], np.nan)
         results = results.fillna(None)
 
@@ -128,6 +132,7 @@ def price_options(
         ]].to_dict(orient="records")
     
     except HTTPException:
+        # re-raise clean FastAPI errors
         raise
 
     except Exception as e:

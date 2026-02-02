@@ -100,6 +100,14 @@ if st.sidebar.button("Load Options"):
 
     st.line_chart(
         chart_df.set_index("Strike Price")[
-            ["SABR_B76_Price", "BS_Price"]
+            ["Entry_Premium", "SABR_B76_Price", "BS_Price"]
         ]
     )
+
+    chart_df["SABR_Error"] = chart_df["SABR_B76_Price"] - chart_df["Entry_Premium"]
+    chart_df["BS_Error"] = chart_df["BS_Price"] - chart_df["Entry_Premium"]
+
+    st.line_chart(
+        chart_df.set_index("Strike Price")[["SABR_Error", "BS_Error"]]
+    )
+

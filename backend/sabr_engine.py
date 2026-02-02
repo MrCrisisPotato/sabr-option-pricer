@@ -399,7 +399,9 @@ def process_day(group):
             "Fair"
         )
     )
-    
+    print("Has inf:", np.isinf(group.select_dtypes(float)).any().any())
+    print("Has NaN:", group.isna().any().any())
+
     # Store calibrated parameters for reference
     group['SABR_Alpha'] = alpha
     group['SABR_Beta'] = beta
@@ -407,7 +409,7 @@ def process_day(group):
     group['SABR_Nu'] = nu
     group['Inferred_Spot'] = S
     group = group.replace([np.inf, -np.inf], np.nan)
-
+    
     return group
 
 

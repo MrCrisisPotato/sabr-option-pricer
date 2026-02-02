@@ -406,7 +406,8 @@ def process_day(group):
     group['SABR_Rho'] = rho
     group['SABR_Nu'] = nu
     group['Inferred_Spot'] = S
-    
+    group = group.replace([np.inf, -np.inf], np.nan)
+
     return group
 
 

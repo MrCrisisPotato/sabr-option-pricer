@@ -42,7 +42,7 @@ def black_76_price(f, K, T, r, sigma, otype):
         return discount * (K * norm.cdf(-d2) - f * norm.cdf(-d1))
 
 
-def cuda_sabr_monte_carlo_price(F0, K, T, r, alpha, beta, rho, nu, otype, paths=500000, steps=100):
+def cuda_sabr_monte_carlo_price(F0, K, T, r, alpha, beta, rho, nu, otype, paths=100000, steps=100):
     """
     TRUE SABR Monte Carlo Simulation using GPU acceleration.
     Simulates the full SABR stochastic volatility model:

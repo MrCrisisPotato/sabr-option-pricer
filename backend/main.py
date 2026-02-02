@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 from datetime import datetime
 from config import INDEX_CONFIG
+import numpy as np
 
 app = FastAPI()
 
@@ -109,6 +110,11 @@ def price_options(
         chain_df["Spot"] = spot
 
         results = price_live(chain_df)
+
+        # ---- SANITIZE OUTPUT FOR JSON ----
+        results = results.replace([np.inf, -np.inf], np.nan)
+        results = results.fillna(None)
+
 
         return results[[
             "Strike Price",

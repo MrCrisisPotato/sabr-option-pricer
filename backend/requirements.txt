@@ -4,4 +4,3 @@ numpy
 scipy
 matplotlib
 requests
-cupy-cuda12x   # only if GPU is optional, otherwise remove

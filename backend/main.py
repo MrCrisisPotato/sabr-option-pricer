@@ -111,10 +111,10 @@ def price_options(
 
         results = price_live(chain_df)
 
-        # ---- SANITIZE OUTPUT FOR JSON ----
-        results = results.replace([np.inf, -np.inf], np.nan)
-        results = results.fillna(None)
+        if isinstance(results, dict):
+            return results
 
+        results = results.replace([np.inf, -np.inf], None)
 
         return results[[
             "Strike Price",

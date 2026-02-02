@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime
 from sabr_engine import process_day
+import numpy as np
 
 
 
@@ -73,6 +74,9 @@ def price_live(chain):
             "message": "Option chain exists but contains no usable quotes."
         }
 
-    return df.groupby("Entry_Date", group_keys=False).apply(process_day)
+    out = df.groupby("Entry_Date", group_keys=False).apply(process_day)
+    out = out.replace([np.inf, -np.inf], np.nan)
+
+    return out.reset_index(drop=True)
 
 

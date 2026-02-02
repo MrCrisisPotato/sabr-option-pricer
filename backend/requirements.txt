@@ -3,6 +3,5 @@ pandas
 numpy
 scipy
 matplotlib
-quantlib
 requests
 cupy-cuda12x   # only if GPU is optional, otherwise remove

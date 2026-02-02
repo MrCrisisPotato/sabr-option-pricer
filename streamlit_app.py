@@ -1,9 +1,8 @@
 # streamlit_app.py
 import sys
-from pathlib import Path
+import os
 
-# --- allow imports from backend ---
-sys.path.append(str(Path(__file__).parent / "backend"))
+sys.path.append(os.path.dirname(__file__))
 
 import streamlit as st
 import pandas as pd

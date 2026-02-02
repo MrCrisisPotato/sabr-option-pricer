@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 
 # ---------------- CONFIG ----------------
-BACKEND_URL = "http://localhost:8000"  
+BACKEND_URL = "http://localhost:8000"   
 # ---------------------------------------
 
 st.set_page_config(
@@ -70,22 +70,7 @@ if st.sidebar.button("Load Options"):
         st.warning(data["message"])
         st.stop()
 
-    # Handle backend error responses
-    if isinstance(data, dict):
-        if data.get("status") == "error":
-            st.error(data.get("message", "Unknown backend error"))
-            st.stop()
-        if data.get("status") == "market_closed":
-            st.warning(data.get("message", "Market closed"))
-            st.stop()
-
-    # At this point, data MUST be a list of rows
-    if not isinstance(data, list) or len(data) == 0:
-        st.warning("No option data returned")
-        st.stop()
-
     df = pd.DataFrame(data)
-
 
     # ---------------- Display ----------------
     st.subheader(f"Option Chain — {underlying} {expiry}")

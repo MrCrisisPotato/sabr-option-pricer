@@ -98,13 +98,13 @@ if st.sidebar.button("Load Options"):
             "Market_Vol": "{:.3f}",
             "SABR_IV": "{:.3f}",
         })
-        .applymap(
+        .map(
             lambda x: "color: green" if "Cheap" in str(x)
             else "color: red" if "Expensive" in str(x)
             else "",
             subset=["Valuation"]
-        ),
-        df.style.apply(highlight_signal, axis=1),
+        )
+        .apply(highlight_signal, axis=1),
         use_container_width=True
     )
 

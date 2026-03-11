@@ -20,7 +20,8 @@ INDEX_MAP = {
     "NIFTY 50": "NIFTY",
     "BANKNIFTY": "BANKNIFTY",
     "FINNIFTY": "FINNIFTY",
-    "MIDCAPNIFTY": "MIDCPNIFTY"
+    "MIDCAPNIFTY": "MIDCPNIFTY",
+    "NIFTY NEXT 50":"NIFTYNXT50"
 }
 
 index_label = st.sidebar.selectbox(

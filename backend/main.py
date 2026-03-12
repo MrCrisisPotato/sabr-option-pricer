@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.encoders import jsonable_encoder
 from upstox import build_live_option_chain, get_index_spot, get_instruments_df, get_live_quotes, get_nifty_expiries
 from pricing import price_live
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,6 +7,7 @@ from typing import Optional
 from datetime import datetime
 from config import INDEX_CONFIG
 import numpy as np
+import pandas as pd
 
 app = FastAPI()
 
@@ -114,9 +116,11 @@ def price_options(
         if isinstance(results, dict):
             return results
 
-        results = results.replace([np.inf, -np.inf], None)
-
-        return results[[
+        # results = results.replace([np.inf, -np.inf], None)
+        results = results.replace([np.inf, -np.inf], np.nan)
+        results = results.astype(object).where(pd.notnull(results), None)
+        
+        return jsonable_encoder(results[[
             "Strike Price",
             "Option type",
             "Entry_Premium",
@@ -130,7 +134,7 @@ def price_options(
             "Delta",
             "Buy_Signal",
             "Valuation"
-        ]].to_dict(orient="records")
+        ]].to_dict(orient="records"))
     
     except HTTPException:
         # re-raise clean FastAPI errors

@@ -13,8 +13,8 @@ def upstox_to_df(chain):
 
     for opt in chain:
         row = {
-            "Entry_Date": entry_date,                       # ✅ REQUIRED
-            "Expiry": pd.to_datetime(opt["expiry"]),        # ✅ REQUIRED
+            "Entry_Date": entry_date,                      
+            "Expiry": pd.to_datetime(opt["expiry"]),       
             "Strike Price": float(opt["strike_price"]),
             "Option type": "CE" if opt["option_type"] == "CALL" else "PE",
             "Entry_Premium": float(opt["last_price"]),
@@ -28,21 +28,6 @@ def upstox_to_df(chain):
     print("DEBUG upstox_to_df head:\n", df.head())
 
     return df
-
-# def upstox_to_df(chain):
-#     rows = []
-#     today = date.today()
-
-#     for opt in chain:
-#         rows.append({
-#             "Entry_Date": today,
-#             "Expiry": pd.to_datetime(opt["expiry"]),
-#             "Strike Price": opt["strike_price"],
-#             "Option type": "CE" if opt["option_type"] == "CALL" else "PE",
-#             "Entry_Premium": opt["last_price"]
-#         })
-
-#     return pd.DataFrame(rows)
 
 def price_live(chain):
     # Case 1: chain is None

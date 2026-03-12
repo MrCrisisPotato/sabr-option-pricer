@@ -128,9 +128,15 @@ if st.sidebar.button("Load Options"):
 
 
     # ---------------- Charts ----------------
-    # st.subheader("SABR vs Black-Scholes Prices")
+    st.subheader("Market Volatility Smile vs SABR Model Fit")
     
-    # chart_df = df.sort_values("Strike Price")
+    chart_df = df.sort_values("Strike Price")
+
+    call_df = df[df["Option type"] == "CE"]
+
+    st.line_chart(
+        chart_df.set_index("Strike Price")[["Market_Vol", "SABR_IV"]]
+    )
 
     # st.line_chart(
     #     chart_df.set_index("Strike Price")[

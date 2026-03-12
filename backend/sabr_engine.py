@@ -413,10 +413,16 @@ def process_day(group):
         )
     )
 
+    vega_max = group["Vega"].max()
+    if vega_max == 0 or pd.isna(vega_max):
+        vega_scaled = 0
+    else:
+        vega_scaled = group["Vega"] / vega_max * 10
+
     group["Buy_Signal"] = group.apply(buy_signal, axis=1)
     group["Buy_Confidence"] = (
         0.6 * group["Mispricing_Pct"].clip(lower=0) +
-        0.4 * (group["Vega"] / group["Vega"].max() * 10)
+        0.4 * vega_scaled
     ).clip(0, 100)
 
     print("Has inf:", np.isinf(group.select_dtypes(float)).any().any())

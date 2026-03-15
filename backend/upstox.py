@@ -32,8 +32,7 @@ def get_index_spot(underlying: str):
 
     if not data:
         raise ValueError("No LTP data returned for NIFTY")
-
-    # ✅ take the FIRST value dynamically
+        
     spot = list(data.values())[0]["last_price"]
     return spot
 
@@ -83,7 +82,6 @@ def get_live_quotes(instrument_keys):
 
     data = r.json()["data"]
 
-    # Normalize → key by instrument_token
     quotes = {
         v["instrument_token"]: v
         for v in data.values()
@@ -106,7 +104,7 @@ def build_live_option_chain(instruments_df, quotes, expiry):
         opt_type = row["option_type"].upper()
         entry_date = Timestamp.now().normalize()
         rows.append({
-            "Entry_Date": entry_date, #datetime.today().replace(hour=0, minute=0, second=0),
+            "Entry_Date": entry_date, 
             "Expiry": pd.to_datetime(expiry),
             "Strike Price": row["strike"],
             "Option type": "CE" if opt_type in ["CE", "CALL"] else "PE",

@@ -13,7 +13,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # frontend origin
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -59,18 +59,12 @@ def price_options(
         expiry_date = datetime.strptime(expiry, "%Y-%m-%d").date()
 
         instruments = get_instruments_df()
-        # print(instruments[instruments["name"] == "NIFTY"]["expiry"].unique()[:5])
         df = instruments[
             (instruments["exchange"].isin(["NSE_FO", "NFO"])) &
             (instruments["instrument_type"] == "OPTIDX") &
             (instruments["name"] == underlying) &
             (instruments["expiry"] == expiry_date)
         ]
-        # print(
-        #     instruments[
-        #         instruments["instrument_type"] == "OPTIDX"
-        #     ][["exchange", "name"]].drop_duplicates().head(10)
-        # )
 
         if df.empty:
             raise HTTPException(400, "No instruments found for expiry")
@@ -99,11 +93,8 @@ def price_options(
                 "underlying": underlying
             }
 
-
-        # Step 2: keep only instruments that ACTUALLY have quotes
         df = df[df["instrument_key"].isin(quotes.keys())].copy()
 
-        # Step 3: now safely do ATM filtering
         atm_strike = df["strike"].median()
         df.loc[:, "dist"] = (df["strike"] - atm_strike).abs()
         df = df.sort_values("dist").head(40)
@@ -116,7 +107,6 @@ def price_options(
         if isinstance(results, dict):
             return results
 
-        # results = results.replace([np.inf, -np.inf], None)
         results = results.replace([np.inf, -np.inf], np.nan)
         results = results.astype(object).where(pd.notnull(results), None)
         
@@ -137,7 +127,6 @@ def price_options(
         ]].to_dict(orient="records"))
     
     except HTTPException:
-        # re-raise clean FastAPI errors
         raise
 
     except Exception as e:

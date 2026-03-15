@@ -7,8 +7,6 @@ import numpy as np
 
 def upstox_to_df(chain):
     rows = []
-
-    # Use a single entry date for the whole chain
     entry_date = pd.Timestamp.now().normalize()
 
     for opt in chain:
@@ -23,28 +21,21 @@ def upstox_to_df(chain):
 
     df = pd.DataFrame(rows)
 
-    # 🔥 HARD DEBUG (do not remove yet)
-    print("DEBUG upstox_to_df columns:", df.columns.tolist())
-    print("DEBUG upstox_to_df head:\n", df.head())
-
     return df
 
 def price_live(chain):
-    # Case 1: chain is None
     if chain is None:
         return {
             "status": "market_closed",
             "message": "No live option quotes available."
         }
 
-    # Case 2: chain is an empty list
     if isinstance(chain, list) and len(chain) == 0:
         return {
             "status": "market_closed",
             "message": "No live option quotes available."
         }
 
-    # Case 3: chain is already a DataFrame
     if isinstance(chain, pd.DataFrame) and chain.empty:
         return {
             "status": "market_closed",

@@ -2,9 +2,7 @@ import streamlit as st
 import requests
 import pandas as pd
 
-# ---------------- CONFIG ----------------
-BACKEND_URL = "http://localhost:8000"   # change when deployed
-# ---------------------------------------
+BACKEND_URL = "http://localhost:8000" 
 
 st.set_page_config(
     page_title="SABR Option Pricer",
@@ -12,8 +10,6 @@ st.set_page_config(
 )
 
 st.title("SABR Option Pricer")
-
-# ---------------- Sidebar ----------------
 st.sidebar.header("Inputs")
 
 INDEX_MAP = {
@@ -31,7 +27,6 @@ index_label = st.sidebar.selectbox(
 
 underlying = INDEX_MAP[index_label]
 
-# ---------------- Load expiries ----------------
 @st.cache_data
 def fetch_expiries(underlying):
     r = requests.get(
@@ -49,7 +44,6 @@ except Exception as e:
     st.sidebar.error(f"Failed to load expiries: {e}")
     st.stop()
 
-# ---------------- Fetch prices ----------------
 if st.sidebar.button("Load Options"):
     with st.spinner("Pricing options using SABR..."):
         r = requests.get(
@@ -73,7 +67,6 @@ if st.sidebar.button("Load Options"):
 
     df = pd.DataFrame(data)
 
-    # ---------------- Display ----------------
     def highlight_signal(row):
         if row["Buy_Signal"] == "STRONG BUY":
             return ["background-color: #004d1a"] * len(row)
@@ -109,7 +102,6 @@ if st.sidebar.button("Load Options"):
         use_container_width=True
     )
 
-
     st.subheader("Buy Recommendations")
 
     buy_df = df[df["Buy_Signal"].isin(["BUY", "STRONG BUY"])]
@@ -125,9 +117,6 @@ if st.sidebar.button("Load Options"):
             use_container_width=True
         )
 
-
-
-    # ---------------- Charts ----------------
     st.subheader("Market Volatility Smile vs SABR Model Fit")
     
     chart_df = df.sort_values("Strike Price")
@@ -137,17 +126,3 @@ if st.sidebar.button("Load Options"):
     st.line_chart(
         chart_df.set_index("Strike Price")[["Market_Vol", "SABR_IV"]]
     )
-
-    # st.line_chart(
-    #     chart_df.set_index("Strike Price")[
-    #         ["Entry_Premium", "SABR_B76_Price", "BS_Price"]
-    #     ]
-    # )
-
-    # chart_df["SABR_Error"] = chart_df["SABR_B76_Price"] - chart_df["Entry_Premium"]
-    # chart_df["BS_Error"] = chart_df["BS_Price"] - chart_df["Entry_Premium"]
-
-    # st.line_chart(
-    #     chart_df.set_index("Strike Price")[["SABR_Error", "BS_Error"]]
-    # )
-
